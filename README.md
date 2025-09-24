@@ -1,3 +1,19 @@
+# HTB Academy - Footprinting Write-up
+
+### Table of Contents
+1. [FTP](#ftp)
+2. [SMB](#smb)
+3. [NFS](#nfs)
+4. [DNS](#dns)
+5. [SMTP](#smtp)
+6. [IMAP/POP3](#imappop3)
+7. [SNMP](#snmp)
+8. [MySQL](#mysql)
+9. [MSSQL](#mssql)
+10. [Oracle-TNS](#oracle-tns)
+11. [IPMI](#ipmi)
+
+---
 # FTP
 1. Which version of the FTP server is running on the target system? Submit the entire banner as the answer.
 
@@ -143,6 +159,7 @@
 
 # NFS
 1. Enumerate the NFS service and submit the contents of the flag.txt in the "nfs" share as the answer.
+
     We can solve this just by login in.
     ```bash
     sudo mount -t nfs 10.129.75.222:/ ./target-nfs/ -o nolock
@@ -161,6 +178,7 @@
     5 directories, 2 files
     ```
 2. Enumerate the NFS service and submit the contents of the flag.txt in the "nfsshare" share as the answer.
+
     We can solve by changing the directory
 
 # DNS
