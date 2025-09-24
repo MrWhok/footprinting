@@ -927,3 +927,75 @@
     ```bash
     [+] 10.129.149.184:623 - IPMI - Hash for user 'admin' matches password 'trinity'
     ```
+
+# Footprinting Lab - Easy
+## Challenges
+1. Enumerate the server carefully and find the flag.txt file. Submit the contents of this file as the answer.
+
+    In this challenge, we have been give credentials `ceil:qwer1234`. First, we scan the host using nmap.
+
+    ```bash
+    nmap -sV -sC 10.129.111.87 -v 
+    ```
+
+    Here the nmap result.
+
+    ```bash
+    PORT     STATE SERVICE VERSION
+    21/tcp   open  ftp?
+    | fingerprint-strings:
+    |   GenericLines:
+    |     220 ProFTPD Server (ftp.int.inlanefreight.htb) [10.129.111.87]
+    |     Invalid command: try being more creative
+    |_    Invalid command: try being more creative
+    22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.2 (Ubuntu Linux; protocol 2.0)
+    | ssh-hostkey:
+    |   3072 3f:4c:8f:10:f1:ae:be:cd:31:24:7c:a1:4e:ab:84:6d (RSA)
+    |   256 7b:30:37:67:50:b9:ad:91:c0:8f:f7:02:78:3b:7c:02 (ECDSA)
+    |_  256 88:9e:0e:07:fe:ca:d0:5c:60:ab:cf:10:99:cd:6c:a7 (ED25519)
+    53/tcp   open  domain  ISC BIND 9.16.1 (Ubuntu Linux)
+    | dns-nsid:
+    |_  bind.version: 9.16.1-Ubuntu
+    2121/tcp open  ftp
+    | fingerprint-strings:
+    |   GenericLines:
+    |     220 ProFTPD Server (Ceil's FTP) [10.129.111.87]
+    |     Invalid command: try being more creative
+    |_    Invalid command: try being more creative
+    ```
+
+    Based on the output, we can use ceil user in the ftp port 2121 and the provided password.
+    
+    ```bash
+    ftp 10.129.111.87 2121
+    ```
+
+    After login, we can explore in there.
+
+    ```bash
+    ftp> ls -a
+    200 PORT command successful
+    150 Opening ASCII mode data connection for file list
+    drwxr-xr-x   4 ceil     ceil         4096 Nov 10  2021 .
+    drwxr-xr-x   4 ceil     ceil         4096 Nov 10  2021 ..
+    -rw-------   1 ceil     ceil          294 Nov 10  2021 .bash_history
+    -rw-r--r--   1 ceil     ceil          220 Nov 10  2021 .bash_logout
+    -rw-r--r--   1 ceil     ceil         3771 Nov 10  2021 .bashrc
+    drwx------   2 ceil     ceil         4096 Nov 10  2021 .cache
+    -rw-r--r--   1 ceil     ceil          807 Nov 10  2021 .profile
+    drwx------   2 ceil     ceil         4096 Nov 10  2021 .ssh
+    -rw-------   1 ceil     ceil          759 Nov 10  2021 .viminfo
+    226 Transfer complete
+    ```
+
+    Based on `ls -a` output, we can see that it contains .ssh folder. That folder contain id_rsa which can be used to login ssh. So we download that file by using `get id_rsa` on the folder. Then we quit ftp session. To use `id_rsa`, we should change the file permission by using `chmod 600 id_rsa`. After that, we tried to ssh using specific method.
+
+    ```bash
+    ssh -o KexAlgorithms=diffie-hellman-group14-sha256 -o Ciphers=aes256-ctr -i id_rsa ceil@10.129.111.87 -v
+    ```
+
+    In there we can find the flag. This commands will find specific path of the flag.
+
+    ```bash
+    find / -type f -name "flag.txt" 2>/dev/null
+    ```

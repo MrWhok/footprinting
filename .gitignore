@@ -2,3 +2,5 @@ rockyou.txt
 Footprinting-wordlist.zip
 odat-venv/
 odat/
+id_rsa
+ssh_audit/
