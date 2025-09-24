@@ -12,6 +12,7 @@
 9. [MSSQL](#mssql)
 10. [Oracle-TNS](#oracle-tns)
 11. [IPMI](#ipmi)
+12. [Footprinting Lab - Easy](#footprinting-lab---easy)
 
 ---
 # FTP
