@@ -13,6 +13,7 @@
 10. [Oracle-TNS](#oracle-tns)
 11. [IPMI](#ipmi)
 12. [Footprinting Lab - Easy](#footprinting-lab---easy)
+13. [Footprinting Lab - Medium](#footprinting-lab---medium)
 
 ---
 # FTP
